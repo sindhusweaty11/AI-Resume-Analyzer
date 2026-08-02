@@ -1,0 +1,274 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>AI Resume Analyzer</title>
+	<style>
+		:root{--bg:#071022;--card:#081328;--accent:#5b7cff;--muted:#9ca3af;--glass:rgba(255,255,255,0.03)}
+		body{margin:0;font-family:Inter,Segoe UI,Helvetica,Arial;background:linear-gradient(180deg,#071022 0%,#0b1633 45%,#0f1e44 100%);color:#e6eef8}
+		.wrap{max-width:1100px;margin:28px auto;padding:20px}
+		.grid{display:grid;grid-template-columns:1fr 420px;gap:20px}
+		.card{background:var(--card);border-radius:10px;padding:18px;box-shadow:0 6px 30px rgba(2,6,23,0.6)}
+		h1{margin:0 0 12px;font-size:20px}
+		.upload-area{border:2px dashed var(--glass);padding:22px;text-align:center;border-radius:8px}
+		.btn{background:linear-gradient(90deg,#7c3aed 0%,#3b82f6 100%);color:#fff;padding:10px 14px;border-radius:10px;border:none;cursor:pointer;box-shadow:0 6px 18px rgba(59,130,246,0.18);transition:transform .18s ease,box-shadow .18s ease}
+		.btn:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(59,130,246,0.22)}
+		.btn:active{transform:translateY(-1px)}
+		.row{display:flex;gap:12px;align-items:center}
+		select, input[type=file]{width:100%;padding:8px;border-radius:8px;background:#071226;border:1px solid rgba(255,255,255,0.03);color:#e6eef8}
+		.score-wrap{text-align:center}
+		.circle{width:200px;height:200px;margin:0 auto}
+		.lists{display:flex;gap:12px;margin-top:12px}
+		.list{flex:1;background:linear-gradient(180deg,rgba(124,58,237,0.06),rgba(59,130,246,0.03));padding:12px;border-radius:10px;min-height:120px;border:1px solid rgba(124,58,237,0.06)}
+		.label{font-size:15px;color:var(--muted);margin-bottom:8px}
+		.skills{display:flex;flex-wrap:wrap;gap:8px}
+		.chip{background:#071226;border:1px solid rgba(255,255,255,0.03);padding:6px 8px;border-radius:16px;font-size:13px;opacity:0;transform:translateY(6px);transition:opacity .35s ease,transform .35s ease}
+		.footer{margin-top:18px;color:var(--muted);font-size:13px}
+		.side-section{display:flex;flex-direction:column;gap:12px}
+		.other-roles{display:flex;flex-direction:column;gap:6px}
+		.role-badge{font-weight:600;background:linear-gradient(90deg,#7c3aed 0%,#3b82f6 50%,#06b6d4 100%);background-size:200% 200%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gradientMove 3s linear infinite;padding:4px 6px;border-radius:6px}
+		.role-badge::after{content:'';display:inline-block;width:6px;height:6px;margin-left:8px;border-radius:50%;background:rgba(123,65,255,0.18);box-shadow:0 0 12px rgba(59,130,246,0.18)}
+		@keyframes gradientMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+		/* Gradient animated headings and labels */
+		.gradient-text{background:linear-gradient(90deg,#8b5cf6 0%,#3b82f6 45%,#06b6d4 100%);background-size:200% 200%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gradientMove 3s linear infinite}
+		.gradient-title{font-size:24px;letter-spacing:0.2px}
+		.gradient-tagline{font-size:14px;color:var(--muted);background:linear-gradient(90deg,#b794f4 0%,#7cc0ff 100%);background-clip:text;-webkit-background-clip:text;color:transparent;animation:gradientMove 4s linear infinite}
+		.gradient-sub{font-weight:700;color:var(--muted);font-size:15px}
+		.gradient-sub.important{background:linear-gradient(90deg,#7c3aed 0%,#3b82f6 100%);background-clip:text;-webkit-background-clip:text;color:transparent;animation:gradientMove 3s linear infinite}
+		.gradient-label{font-weight:700;background:linear-gradient(90deg,#7c3aed 0%,#3b82f6 45%,#06b6d4 100%);background-size:200% 200%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gradientMove 3s linear infinite;display:inline-block}
+		.title-icons{display:flex;align-items:center;gap:10px}
+		.title-icons svg{width:28px;height:28px;animation:floaty 3.5s ease-in-out infinite;transform-origin:center;filter:drop-shadow(0 8px 20px rgba(59,130,246,0.18))}
+		.title-icons svg.job-icon{fill:#7c3aed}
+		.title-icons svg.bulb-icon{fill:#facc15}
+		.role-row{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+		.role-name{font-size:14px;color:#e6eef8;font-weight:600}
+		.role-bar-container{display:flex;align-items:center;gap:10px;width:100%;margin-top:6px}
+		.role-bar{flex:1;height:10px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden}
+		.role-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#7c3aed 0%,#3b82f6 50%,#06b6d4 100%);box-shadow:0 10px 22px rgba(59,130,246,0.18);transition:width 1s ease}
+		.role-score{font-size:13px;color:#e6eef8;font-weight:700;min-width:42px;text-align:right}
+		.small{font-size:12px}
+		.final-rec{display:inline-block;font-size:15px;font-weight:700;margin-top:6px;padding:10px 14px;border-radius:12px;background:linear-gradient(90deg,#7c3aed 0%,#3b82f6 50%,#06b6d4 100%);color:#fff;box-shadow:0 10px 30px rgba(59,130,246,0.12);animation:glow 3.2s ease-in-out infinite;min-width:220px;text-align:center}
+		@keyframes glow{0%{box-shadow:0 8px 20px rgba(124,58,237,0.08)}50%{box-shadow:0 18px 46px rgba(59,130,246,0.18)}100%{box-shadow:0 8px 20px rgba(124,58,237,0.08)}}
+		@keyframes floaty{0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)}}
+		.skill-btn{background:linear-gradient(90deg,#7c3aed 0%,#3b82f6 100%);color:#fff;padding:8px 12px;border-radius:16px;border:none;cursor:pointer;font-size:14px;box-shadow:0 6px 20px rgba(59,130,246,0.12);transition:transform .18s ease,box-shadow .18s ease;opacity:0;transform:translateY(6px)}
+		.skill-btn:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(59,130,246,0.18)}
+		.progress-num{font-size:32px;font-weight:700}
+		/* animated progress */
+		#progress{transition:stroke-dasharray 1s ease; transform-origin:50% 50%;}
+		.fade-in{opacity:1 !important;transform:none !important}
+	</style>
+</head>
+<body>
+	<div class="wrap">
+			<div class="card" style="margin-bottom:14px">
+			<div style="display:flex;align-items:center;justify-content:space-between">
+			<div style="display:flex;align-items:center;gap:12px">
+				<div class="title-icons" aria-hidden="true">
+					<svg class="job-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 7V6a2 2 0 0 1 2-2h2V2h4v2h2a2 2 0 0 1 2 2v1h-2V6H8v1H6zm13 2H5a1 1 0 0 0-1 1v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a1 1 0 0 0-1-1zm-1 2v7H7v-7h11z"/></svg>
+					<svg class="bulb-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9 21h6v-1a3 3 0 0 0-6 0v1z"/><path d="M12 2a7 7 0 0 0-4 12.9V16a3 3 0 0 0 2 2.82V21h4v-2.18A3 3 0 0 0 16 16v-1.1A7 7 0 0 0 12 2z"/></svg>
+				</div>
+				<h1 class="gradient-text gradient-title">AI Resume Analyzer</h1>
+			</div>
+		</div>
+
+		<div class="grid">
+			<div>
+				<div class="card">
+					<div class="gradient-sub important" style="margin-bottom:8px">Upload Resume (PDF)</div>
+					<div class="upload-area">
+						<form id="uploadForm">
+							<input id="resumeFile" type="file" accept="application/pdf" required />
+							<div style="height:12px"></div>
+							<label class="label gradient-label">Target Role</label>
+							<select id="roleSelect">
+								<option>Software Engineer</option>
+								<option>Python Developer</option>
+								<option>Java Developer</option>
+								<option>Full Stack Developer</option>
+								<option>Frontend Developer</option>
+								<option>Backend Developer</option>
+								<option>UI/UX Designer</option>
+								<option>Data Analyst</option>
+								<option>Data Scientist</option>
+								<option>AI Engineer</option>
+								<option>DevOps Engineer</option>
+								<option>Cloud Engineer</option>
+								<option>QA Engineer</option>
+								<option>Cybersecurity Analyst</option>
+								<option>Business Analyst</option>
+								<option>Product Manager</option>
+								<option>Mobile App Developer</option>
+								<option>Database Administrator</option>
+								<option>HR</option>
+								<option>Marketing</option>
+								<option>Sales</option>
+							</select>
+							<div style="height:12px"></div>
+							<div class="row"><button class="btn" type="submit">Analyze Resume</button></div>
+						</form>
+					</div>
+
+					<div class="lists">
+						<div class="list">
+							<div class="label gradient-sub important">Skills Found</div>
+							<div id="skillsFound" class="skills"></div>
+						</div>
+						<div class="list">
+							<div class="label gradient-sub important">Missing Skills</div>
+							<div id="skillsMissing" class="skills"></div>
+						</div>
+					</div>
+
+					<div class="footer">Resume Tips: Add achievements, include projects, improve summary, add certifications.</div>
+				</div>
+
+				<div class="card" style="margin-top:12px">
+					<div class="gradient-sub important" style="margin-bottom:10px">Career Roadmap</div>
+					<div id="roadmap"></div>
+				</div>
+			</div>
+
+			<div>
+				<div class="card side-section">
+						<div class="score-wrap">
+						<div style="display:flex;align-items:center;justify-content:space-between">
+							<div style="text-align:left">
+								<div class="gradient-sub important small">ATS Score</div>
+								<div id="greeting" class="gradient-sub" style="margin-top:6px">Your resume</div>
+							</div>
+							<div></div>
+						</div>
+						<div class="circle" id="circleWrap">
+							<svg viewBox="0 0 36 36" style="width:100%;height:100%">
+								<path d="M18 2.0845a15.9155 15.9155 0 1 1 0 31.831" fill="none" stroke="#1f2a44" stroke-width="3"></path>
+								<path id="progress" d="M18 2.0845a15.9155 15.9155 0 1 1 0 31.831" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="0,100"></path>
+								<text x="18" y="20.35" fill="#e6eef8" font-size="7" text-anchor="middle" id="scoreText">0</text>
+							</svg>
+						</div>
+					</div>
+
+					<div>
+						<div class="gradient-sub important" style="margin-top:8px">Other Roles You Can Try</div>
+						<div id="otherRoles" class="other-roles"></div>
+					</div>
+
+					<div>
+						<div class="gradient-label" style="font-weight:600;margin-top:8px">Final Recommendation</div>
+						<div id="finalRec" class="final-rec gradient-text"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		const form = document.getElementById('uploadForm')
+		function escapeHtml(str){
+			return String(str)
+				.replace(/&/g,'&amp;')
+				.replace(/</g,'&lt;')
+				.replace(/>/g,'&gt;')
+				.replace(/"/g,'&quot;')
+				.replace(/'/g,'&#39;')
+		}
+		const skillsFoundEl = document.getElementById('skillsFound')
+		const skillsMissingEl = document.getElementById('skillsMissing')
+		const scoreText = document.getElementById('scoreText')
+		const progressPath = document.getElementById('progress')
+		const otherRolesEl = document.getElementById('otherRoles')
+		const roadmapEl = document.getElementById('roadmap')
+		const finalRecEl = document.getElementById('finalRec')
+		let lastAnalysis = null
+
+		function setProgress(p){
+			const pct = Math.max(0, Math.min(100, p))
+			const dash = (pct/100) * 100
+			progressPath.setAttribute('stroke-dasharray', `${dash},100`)
+			scoreText.textContent = pct.toString()
+		}
+
+		form.addEventListener('submit', async (e)=>{
+			e.preventDefault()
+			const fileEl = document.getElementById('resumeFile')
+			if(!fileEl.files.length) return alert('Please select a PDF file')
+			const fd = new FormData()
+			fd.append('resume', fileEl.files[0])
+			fd.append('role', document.getElementById('roleSelect').value)
+			const btn = form.querySelector('.btn')
+			btn.disabled = true; btn.textContent='Analyzing...'
+			try{
+				const res = await fetch('/analyze',{method:'POST',body:fd})
+				if(!res.ok) throw new Error('Upload failed')
+				const data = await res.json()
+				lastAnalysis = data
+				skillsFoundEl.innerHTML = ''
+				skillsFoundEl.innerHTML = ''
+				data.skills_found.forEach((s,i)=>{
+					const c=document.createElement('button');
+					c.type = 'button';
+					c.className = 'chip skill-btn';
+					c.textContent = s;
+					skillsFoundEl.appendChild(c);
+					requestAnimationFrame(()=>setTimeout(()=>c.classList.add('fade-in'), 60*i));
+				})
+				skillsMissingEl.innerHTML = ''
+				data.missing_skills.forEach((s,i)=>{
+					const c=document.createElement('button');
+					c.type = 'button';
+					c.className = 'chip skill-btn';
+					c.textContent = s;
+					skillsMissingEl.appendChild(c);
+					requestAnimationFrame(()=>setTimeout(()=>c.classList.add('fade-in'), 60*i));
+				})
+				setProgress(data.ats_score)
+				// animate score number pulse
+				scoreText.style.transition = 'transform .35s ease';
+				scoreText.style.transform = 'scale(1.12)';
+				setTimeout(()=>scoreText.style.transform='scale(1)',350)
+				otherRolesEl.innerHTML = ''
+				data.other_roles.forEach((r,i)=>{
+					const row = document.createElement('div');
+					row.className = 'role-row';
+					const name = document.createElement('div');
+					name.className = 'role-name';
+					name.textContent = r.role;
+					const score = document.createElement('div');
+					score.className = 'role-score';
+					score.textContent = r.score + '%';
+					row.appendChild(name);
+					row.appendChild(score);
+					const barWrapper = document.createElement('div');
+					barWrapper.className = 'role-bar-container';
+					const bar = document.createElement('div');
+					bar.className = 'role-bar';
+					const fill = document.createElement('div');
+					fill.className = 'role-bar-fill';
+					fill.style.width = '0%';
+					bar.appendChild(fill);
+					barWrapper.appendChild(bar);
+					otherRolesEl.appendChild(row);
+					otherRolesEl.appendChild(barWrapper);
+					requestAnimationFrame(()=>setTimeout(()=>{
+						row.classList.add('fade-in');
+						barWrapper.classList.add('fade-in');
+						fill.style.width = r.score + '%';
+					},80*i));
+				})
+				roadmapEl.innerHTML = ''
+				for(const [m,steps] of Object.entries(data.roadmap)){
+					const el = document.createElement('div');el.innerHTML = `<strong>${m}:</strong> ${steps.join(', ')}`;roadmapEl.appendChild(el);
+					requestAnimationFrame(()=>setTimeout(()=>el.classList.add('fade-in'),40));
+				}
+				finalRecEl.innerHTML = escapeHtml(String(data.final_recommendation || '')).replace(/\n/g, '<br>');
+				finalRecEl.classList.add('fade-in');
+			} catch (err) {
+				alert(err.message || err);
+			}
+			btn.disabled = false;
+			btn.textContent = 'Analyze Resume';
+		})
+
+	</script>
+</body>
+</html>
